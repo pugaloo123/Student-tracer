@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Успеваемость студентов</h1>
+<ul>
+    {% for student, avg in student_avg %}
+    <li>{{ student.name }} — средний балл: {{ avg }}</li>
+    {% endfor %}
+</ul>
+
+<h2>Лучший студент: {{ best.0.name }} ({{ best.1 }})</h2>
+<h2>Худший студент: {{ worst.0.name }} ({{ worst.1 }})</h2>
+</body>
+</html>
