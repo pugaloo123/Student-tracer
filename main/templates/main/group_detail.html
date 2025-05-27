@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block title %}{{ group.name }} - Успеваемость{% endblock %}
+
+{% block content %}
+<h1>Успеваемость студентов</h1>
+
+<table class="table table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th>#</th>
+            <th>ФИО</th>
+            {% for subject in subjects %}
+                <th>{{ subject.title }}</th>
+            {% endfor %}
+            <th>Средний балл</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in student_data %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ entry.student.name }}</td>
+            {% for subject in subjects %}
+                <td>{{ entry.grades|get_item:subject.title }}</td>
+            {% endfor %}
+            <td><strong>{{ entry.avg }}</strong></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if best %}
+<div class="mt-4">
+    <h5>🔝 Лучший студент: <strong>{{ best.student.name }}</strong> — {{ best.avg }}</h5>
+    <h5>🔻 Худший студент: <strong>{{ worst.student.name }}</strong> — {{ worst.avg }}</h5>
+</div>
+{% endif %}
+
+<a href="{% url 'main:home' %}" class="btn btn-secondary mt-4">← Назад</a>
+{% endblock %}
