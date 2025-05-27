@@ -1,6 +1,7 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Avg
 from .models import Student, Grade, Group, Subject
+from .forms import GroupForm, StudentForm
 
 
 
@@ -27,6 +28,7 @@ def report(request):
     })
 
 
+'''Group views'''
 def group_list(request):
     groups = Group.objects.all()
     return render(request, 'main/group_list.html', {'groups': groups})
@@ -73,3 +75,67 @@ def group_detail(request, group_id):
         'worst': worst,
     })
 
+def group_create(request):
+    if request.method == 'POST':
+        form = GroupForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('main:home')
+    else:
+        form = GroupForm()
+    return render(request, 'main/group_form.html', {'form': form, 'title': 'Создать группу'})
+
+def group_edit(request, group_id):
+    group = get_object_or_404(Group, id=group_id)
+    if request.method == 'POST':
+        form = GroupForm(request.POST, instance=group)
+        if form.is_valid():
+            form.save()
+            return redirect('main:home')
+    else:
+        form = GroupForm(instance=group)
+    return render(request, 'main/group_form.html', {'form': form, 'title': 'Редактировать группу'})
+
+def group_delete(request, group_id):
+    group = get_object_or_404(Group, id=group_id)
+    if request.method == 'POST':
+        group.delete()
+        return redirect('main:home')
+    return render(request, 'main/group_confirm_delete.html', {'group': group})
+
+
+'''Student views'''
+def student_create(request):
+    group_id = request.GET.get('group')
+    initial = {'group': group_id} if group_id else None
+
+    if request.method == 'POST':
+        form = StudentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            if group_id:
+                return redirect('main:group_detail', group_id=group_id)
+            else:
+                return redirect('main:home')
+    else:
+        form = StudentForm(initial=initial)
+    return render(request, 'main/student_form.html', {'form': form, 'title': 'Добавить студента'})
+
+
+def student_edit(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    if request.method == 'POST':
+        form = StudentForm(request.POST, instance=student)
+        if form.is_valid():
+            form.save()
+            return redirect('main:group_detail', group_id=student.group.id)
+    else:
+        form = StudentForm(instance=student)
+    return render(request, 'main/student_form.html', {'form': form, 'title': 'Редактировать студента'})
+
+def student_delete(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    if request.method == 'POST':
+        student.delete()
+        return redirect('main:group_detail', group_id=student.group.id)
+    return render(request, 'main/student_confirm_delete.html', {'student': student})

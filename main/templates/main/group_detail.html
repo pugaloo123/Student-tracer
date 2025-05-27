@@ -6,6 +6,7 @@
 {% block content %}
 <h1>Успеваемость студентов</h1>
 
+<a href="{% url 'main:student_create' %}?group={{ group.id }}" class="btn btn-success mb-3">Добавить студента в эту группу</a>
 <table class="table table-bordered">
     <thead class="table-light">
         <tr>
@@ -26,6 +27,10 @@
                 <td>{{ entry.grades|get_item:subject.title }}</td>
             {% endfor %}
             <td><strong>{{ entry.avg }}</strong></td>
+            <td>
+        <a href="{% url 'main:student_edit' entry.student.id %}" class="btn btn-sm btn-warning">Редактировать</a>
+        <a href="{% url 'main:student_delete' entry.student.id %}" class="btn btn-sm btn-danger">Удалить</a>
+</td>
         </tr>
         {% endfor %}
     </tbody>
