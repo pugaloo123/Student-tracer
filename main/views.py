@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Avg
 from .models import Student, Grade, Group, Subject
-from .forms import GroupForm, StudentForm
+from .forms import GroupForm, StudentForm, SubjectForm, AddSubjectToGroupForm
 
 
 
@@ -37,18 +37,17 @@ def group_list(request):
 def group_detail(request, group_id):
     group = Group.objects.get(id=group_id)
     students = Student.objects.filter(group=group)
-    subjects = Subject.objects.all()
+    subjects = group.subjects.all()
 
     student_data = []
 
     for student in students:
         grade_dict = {}
         for subject in subjects:
-            # средняя оценка по конкретному предмету
-            avg_grade = Grade.objects.filter(student=student, subject=subject).aggregate(avg=Avg('grade'))['avg']
+            grades_qs = Grade.objects.filter(student=student, subject=subject)
+            avg_grade = grades_qs.aggregate(avg=Avg('grade'))['avg']
             grade_dict[subject.title] = round(avg_grade, 2) if avg_grade is not None else '-'
 
-        # средний балл по всем предметам
         avg_total = [
             v for v in grade_dict.values()
             if isinstance(v, (int, float))
@@ -61,7 +60,6 @@ def group_detail(request, group_id):
             'avg': avg
         })
 
-    # ищем лучшего и худшего студента
     numeric_data = [s for s in student_data if isinstance(s['avg'], (int, float))]
     best = max(numeric_data, key=lambda x: x['avg'], default=None)
     worst = min(numeric_data, key=lambda x: x['avg'], default=None)
@@ -139,3 +137,77 @@ def student_delete(request, student_id):
         student.delete()
         return redirect('main:group_detail', group_id=student.group.id)
     return render(request, 'main/student_confirm_delete.html', {'student': student})
+
+'''Subjects view'''
+# views.py
+
+# def subject_create_for_group(request, group_id):
+#     group = get_object_or_404(Group, id=group_id)
+#
+#     if request.method == 'POST':
+#         form = SubjectForm(request.POST)
+#         if form.is_valid():
+#             subject = form.save()
+#             group.subjects.add(subject)  # Добавляем предмет только этой группе
+#             return redirect('main:group_detail', group_id=group.id)
+#     else:
+#         form = SubjectForm()
+#
+#     return render(request, 'main/subject_form.html', {
+#         'form': form,
+#         'group': group,
+#         'title': 'Добавить предмет в группу'
+#     })
+
+def add_subject_to_group(request, group_id):
+    group = get_object_or_404(Group, id=group_id)
+
+    if request.method == 'POST':
+        form = AddSubjectToGroupForm(request.POST)
+        if form.is_valid():
+            subject = form.cleaned_data['subject']
+            group.subjects.add(subject)
+            return redirect('main:group_detail', group_id=group_id)
+    else:
+        form = AddSubjectToGroupForm()
+
+    return render(request, 'main/add_subject_to_group.html', {
+        'form': form,
+        'group': group
+    })
+
+
+def subject_list(request):
+    subjects = Subject.objects.all()
+    return render(request, 'main/subject_list.html', {'subjects': subjects})
+
+
+def subject_create(request):
+    if request.method == 'POST':
+        form = SubjectForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('main:subject_list')
+    else:
+        form = SubjectForm()
+    return render(request, 'main/subject_form.html', {'form': form, 'title': 'Добавить предмет'})
+
+
+def subject_edit(request, subject_id):
+    subject = get_object_or_404(Subject, id=subject_id)
+    if request.method == 'POST':
+        form = SubjectForm(request.POST, instance=subject)
+        if form.is_valid():
+            form.save()
+            return redirect('main:subject_list')
+    else:
+        form = SubjectForm(instance=subject)
+    return render(request, 'main/subject_form.html', {'form': form, 'title': 'Редактировать предмет'})
+
+
+def subject_delete(request, subject_id):
+    subject = get_object_or_404(Subject, id=subject_id)
+    if request.method == 'POST':
+        subject.delete()
+        return redirect('main:subject_list')
+    return render(request, 'main/subject_confirm_delete.html', {'subject': subject})

@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Удалить предмет "{{ subject.title }}"?</h2>
+<form method="post">
+    {% csrf_token %}
+    <button class="btn btn-danger" type="submit">Удалить</button>
+    <a class="btn btn-secondary" href="{% url 'main:subject_list' %}">Отмена</a>
+</form>
+{% endblock %}
