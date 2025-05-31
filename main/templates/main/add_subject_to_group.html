@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Добавить предмет в группу: {{ group.name }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Добавить</button>
+    <a href="{% url 'main:group_detail' group.id %}" class="btn btn-secondary">Назад</a>
+</form>
+{% endblock %}
