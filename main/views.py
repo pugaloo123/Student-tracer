@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Avg
+from django.forms import modelformset_factory
 from .models import Student, Grade, Group, Subject
 from .forms import GroupForm, StudentForm, SubjectForm, AddSubjectToGroupForm
 
@@ -211,3 +212,60 @@ def subject_delete(request, subject_id):
         subject.delete()
         return redirect('main:subject_list')
     return render(request, 'main/subject_confirm_delete.html', {'subject': subject})
+
+"""Grades"""
+
+
+def edit_grades_table(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    group_subjects = student.group.subjects.all()
+
+    formsets = []
+
+    if request.method == 'POST':
+        all_valid = True
+        for subject in group_subjects:
+            GradeFormSet = modelformset_factory(
+                Grade,
+                fields=('grade',),
+                extra=1,  # всегда есть одна пустая форма
+                can_delete=True
+            )
+            formset = GradeFormSet(
+                request.POST,
+                prefix=str(subject.id),
+                queryset=Grade.objects.filter(student=student, subject=subject)
+            )
+            if formset.is_valid():
+                instances = formset.save(commit=False)
+                for instance in instances:
+                    instance.student = student
+                    instance.subject = subject
+                    instance.save()
+                for obj in formset.deleted_objects:
+                    obj.delete()
+            else:
+                all_valid = False
+            formsets.append((subject, formset))
+
+        if all_valid:
+            return redirect('main:group_detail', group_id=student.group.id)
+
+    else:
+        for subject in group_subjects:
+            GradeFormSet = modelformset_factory(
+                Grade,
+                fields=('grade',),
+                extra=1,
+                can_delete=True
+            )
+            formset = GradeFormSet(
+                prefix=str(subject.id),
+                queryset=Grade.objects.filter(student=student, subject=subject)
+            )
+            formsets.append((subject, formset))
+
+    return render(request, 'main/edit_grades_table.html', {
+        'student': student,
+        'formsets': formsets,
+    })

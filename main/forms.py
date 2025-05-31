@@ -1,5 +1,5 @@
 from django import forms
-from .models import Group, Student, Subject
+from .models import Group, Student, Subject, Grade
 
 class GroupForm(forms.ModelForm):
     class Meta:
@@ -34,4 +34,13 @@ class AddSubjectToGroupForm(forms.Form):
         label="Выберите предмет",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+
+class GradeForm(forms.ModelForm):
+    class Meta:
+        model = Grade
+        fields = ['subject', 'grade']
+        widgets = {
+            'subject': forms.Select(attrs={'class': 'form-control'}),
+            'grade': forms.NumberInput(attrs={'min': 2, 'max': 5, 'step': 0.1}),
+        }
 

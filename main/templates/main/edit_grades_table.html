@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Редактировать оценки для студента: {{ student.name }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {% for subject, formset in formsets %}
+        <h4>{{ subject.title }}</h4>
+        {{ formset.management_form }}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Оценка</th>
+                    <th>Удалить</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in formset %}
+                <tr>
+                    <td>{{ form.grade }}</td>
+                    <td>{% if form.instance.pk %}{{ form.DELETE }}{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <hr>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+
+<a href="{% url 'main:group_detail' student.group.id %}">← Назад к группе</a>
+{% endblock %}
