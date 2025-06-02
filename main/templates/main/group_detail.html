@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block title %}{{ group.name }} - Успеваемость{% endblock %}
+
+{% block content %}
+<h1>Успеваемость студентов</h1>
+
+<a href="{% url 'main:student_create' %}?group={{ group.id }}" class="btn btn-success mb-3">Добавить студента</a>
+<a href="{% url 'main:add_subject_to_group' group.id %}" class="btn btn-success mb-3">
+    Добавить предмет в группу
+</a>
+
+<div class="table-responsive" style="overflow-x: auto;">
+  <table class="table table-bordered table-striped" style="min-width: 1000px;">
+    <thead class="table-light">
+      <tr>
+        <th style="white-space: nowrap;">#</th>
+        <th style="white-space: nowrap;">ФИО</th>
+        {% for subject in subjects %}
+          <th style="white-space: nowrap;">{{ subject.title }}</th>
+        {% endfor %}
+        <th style="white-space: nowrap;">Средний балл</th>
+        <th style="white-space: nowrap;">Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in student_data %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td style="white-space: nowrap;"><a href="{% url 'main:edit_grades_table' entry.student.id %}">{{ entry.student.name }}</a></td>
+          {% for subject in subjects %}
+            <td>{{ entry.grades|get_item:subject.title }}</td>
+          {% endfor %}
+          <td><strong>{{ entry.avg }}</strong></td>
+          <td style="white-space: nowrap;">
+            <a href="{% url 'main:student_edit' entry.student.id %}" class="btn btn-sm btn-warning">Редактировать</a>
+            <a href="{% url 'main:student_delete' entry.student.id %}" class="btn btn-sm btn-danger">Удалить</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+{% if best %}
+<div class="mt-4">
+    <h5>Лучший студент: <strong>{{ best.student.name }}</strong> — {{ best.avg }}</h5>
+    <h5>Худший студент: <strong>{{ worst.student.name }}</strong> — {{ worst.avg }}</h5>
+</div>
+{% endif %}
+
+<a href="{% url 'main:home' %}" class="btn btn-secondary mt-4">← Назад</a>
+{% endblock %}
