@@ -28,7 +28,7 @@
       {% for entry in student_data %}
         <tr>
           <td>{{ forloop.counter }}</td>
-          <td style="white-space: nowrap;"><a href="{% url 'main:edit_grades_table' entry.student.id %}">{{ entry.student.name }}</a></td>
+          <td style="white-space: nowrap;"><a href="{% url 'main:grades_table' entry.student.id %}">{{ entry.student.name }}</a></td>
           {% for subject in subjects %}
             <td>{{ entry.grades|get_item:subject.title }}</td>
           {% endfor %}

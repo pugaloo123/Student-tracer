@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import modelformset_factory
 from .models import Group, Student, Subject, Grade
 
 class GroupForm(forms.ModelForm):
@@ -35,12 +36,21 @@ class AddSubjectToGroupForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
+
+
+
 class GradeForm(forms.ModelForm):
     class Meta:
         model = Grade
         fields = ['subject', 'grade']
         widgets = {
-            'subject': forms.Select(attrs={'class': 'form-control'}),
-            'grade': forms.NumberInput(attrs={'min': 2, 'max': 5, 'step': 0.1}),
+            'grade': forms.NumberInput(attrs={'min': 2, 'max': 5}),
         }
+
+    def clean_grade(self):
+        grade = self.cleaned_data['grade']
+        if not (2 <= grade <= 5):
+            raise forms.ValidationError("Оценка должна быть от 2 до 5.")
+        return grade
+
 

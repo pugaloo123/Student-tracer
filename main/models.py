@@ -26,21 +26,16 @@ class Subject(models.Model):
 
 
 GRADE_CHOICES = [
-    (2.0, '2'),
-    (3.0, '3'),
-    (4.0, '4'),
-    (5.0, '5'),
+    (2, '2'),
+    (3, '3'),
+    (4, '4'),
+    (5, '5'),
 ]
 
 class Grade(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    grade = models.FloatField(
-        validators=[
-            MinValueValidator(2.0),
-            MaxValueValidator(5.0)
-        ], choices=GRADE_CHOICES
-    )
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    subject = models.ForeignKey('Subject', on_delete=models.CASCADE)
+    grade = models.IntegerField(choices=GRADE_CHOICES)
 
     def __str__(self):
         return f"{self.student} - {self.subject}: {self.grade}"
