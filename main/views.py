@@ -1,8 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Avg
-from django.forms import modelformset_factory
+from collections import defaultdict
+
 from .models import Student, Grade, Group, Subject
-from .forms import GroupForm, StudentForm, SubjectForm, AddSubjectToGroupForm
+from .forms import GroupForm, StudentForm, SubjectForm, AddSubjectToGroupForm, GradeForm
 
 
 
@@ -216,56 +217,57 @@ def subject_delete(request, subject_id):
 """Grades"""
 
 
-def edit_grades_table(request, student_id):
-    student = get_object_or_404(Student, id=student_id)
-    group_subjects = student.group.subjects.all()
 
-    formsets = []
+def grades_table(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    grades = Grade.objects.filter(student=student).select_related('subject')
+    return render(request, 'main/grades_table.html', {
+        'student': student,
+        'grades': grades,
+    })
+
+
+def add_grade(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    if request.method == 'POST':
+        form = GradeForm(request.POST)
+        if form.is_valid():
+            grade = form.save(commit=False)
+            grade.student = student
+            grade.save()
+            return redirect('main:grades_table', student_id=student.id)
+    else:
+        form = GradeForm()
+    return render(request, 'main/add_edit_grade.html', {
+        'form': form,
+        'student': student,
+        'grade': None
+    })
+
+def edit_grade(request, grade_id):
+    grade = get_object_or_404(Grade, id=grade_id)
+    if request.method == 'POST':
+        form = GradeForm(request.POST, instance=grade)
+        if form.is_valid():
+            form.save()
+            return redirect('main:grades_table', student_id=grade.student.id)
+    else:
+        form = GradeForm(instance=grade)
+    return render(request, 'main/add_edit_grade.html', {
+        'form': form,
+        'student': grade.student,
+        'grade': grade
+    })
+
+
+
+def delete_grade(request, grade_id):
+    grade = get_object_or_404(Grade, id=grade_id)
+    student = grade.student
 
     if request.method == 'POST':
-        all_valid = True
-        for subject in group_subjects:
-            GradeFormSet = modelformset_factory(
-                Grade,
-                fields=('grade',),
-                extra=1,  # всегда есть одна пустая форма
-                can_delete=True
-            )
-            formset = GradeFormSet(
-                request.POST,
-                prefix=str(subject.id),
-                queryset=Grade.objects.filter(student=student, subject=subject)
-            )
-            if formset.is_valid():
-                instances = formset.save(commit=False)
-                for instance in instances:
-                    instance.student = student
-                    instance.subject = subject
-                    instance.save()
-                for obj in formset.deleted_objects:
-                    obj.delete()
-            else:
-                all_valid = False
-            formsets.append((subject, formset))
+        grade.delete()
+        return redirect('main:grades_table', student.id)
 
-        if all_valid:
-            return redirect('main:group_detail', group_id=student.group.id)
+    return render(request, 'main/confirm_delete_grade.html', {'grade': grade})
 
-    else:
-        for subject in group_subjects:
-            GradeFormSet = modelformset_factory(
-                Grade,
-                fields=('grade',),
-                extra=1,
-                can_delete=True
-            )
-            formset = GradeFormSet(
-                prefix=str(subject.id),
-                queryset=Grade.objects.filter(student=student, subject=subject)
-            )
-            formsets.append((subject, formset))
-
-    return render(request, 'main/edit_grades_table.html', {
-        'student': student,
-        'formsets': formsets,
-    })
