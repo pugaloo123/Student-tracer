@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{% if grade %}Изменить{% else %}Добавить{% endif %} оценку для {{ student.name }}</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">{% if grade %}Сохранить изменения{% else %}Добавить{% endif %}</button>
+</form>
+<a href="{% url 'main:grades_table' student.id %}">← Назад</a>
+{% endblock %}

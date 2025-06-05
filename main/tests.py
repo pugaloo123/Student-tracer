@@ -22,14 +22,14 @@ class ModelTests(TestCase):
     def test_grade_validation(self):
         grade = Grade(student=self.student, subject=self.subject, grade=4.0)
         try:
-            grade.full_clean()  # Проверка валидаторов
+            grade.full_clean()
         except ValidationError:
             self.fail("Grade should be valid with value 4.0")
 
     def test_invalid_grade(self):
         grade = Grade(student=self.student, subject=self.subject, grade=6.0)
         with self.assertRaises(ValidationError):
-            grade.full_clean()  # 6.0 недопустимо
+            grade.full_clean()
 
 
 class ViewTests(TestCase):
@@ -91,21 +91,36 @@ class FormTests(TestCase):
         self.assertIn('grade', form.errors)
 
 
-class GradeFormTests(TestCase):
+class ViewTestsGrades(TestCase):
     def setUp(self):
         self.group = Group.objects.create(name="Группа 101")
         self.student = Student.objects.create(name="Иван Иванов", group=self.group)
         self.subject = Subject.objects.create(title="Математика")
-        self.group.subjects.add(self.subject)
+        self.grade = Grade.objects.create(student=self.student, subject=self.subject, grade=5)
 
-    def test_grade_form_valid(self):
-        form_data = {
-            'subject': self.subject.id,
-            'grade': 4.0
-        }
-        form = GradeForm(data=form_data)
-        form.instance.student = self.student
-        self.assertTrue(form.is_valid(), msg=form.errors)
+    def test_grades_table_view(self):
+        url = reverse('main:grades_table', args=[self.student.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Математика")
+        self.assertContains(response, "5")
+
+    def test_add_grade_view(self):
+        url = reverse('main:add_grade', args=[self.student.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Добавить оценку")
+
+    def test_edit_grade_view(self):
+        url = reverse('main:edit_grade', args=[self.grade.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Изменить оценку")
+
+    def test_delete_grade_post_redirect(self):
+        url = reverse('main:delete_grade', args=[self.grade.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
 
 
 
