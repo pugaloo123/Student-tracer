@@ -3,7 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Group(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     subjects = models.ManyToManyField('Subject', related_name='groups', blank=True)
 
     def __str__(self):
