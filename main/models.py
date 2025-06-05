@@ -19,7 +19,7 @@ class Student(models.Model):
 
 
 class Subject(models.Model):
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.title
